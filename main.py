@@ -22,11 +22,11 @@ from selenium.webdriver.chrome.options import Options
 
 def scraping(first_name="", last_name="", driver=None):
 
-    url = "http://admin.fgcu.edu/directory/index.aspx"
+    url = "https://banner.unf.edu/pls/nfpo/wkindir.p_search_bylastname"
     if driver is None:
         chrome_options = Options()
-        # chrome_options.add_argument("--headless")
-        # chrome_options.add_argument('--disable-gpu')  # Last I checked this was necessary.
+        chrome_options.add_argument("--headless")
+        chrome_options.add_argument('--disable-gpu')  # Last I checked this was necessary.
         driver = webdriver.Chrome(chrome_options=chrome_options, executable_path='WebDriver/chromedriver.exe')
         driver.maximize_window()
 
@@ -34,34 +34,41 @@ def scraping(first_name="", last_name="", driver=None):
 
     # last_name= driver.find_element_by_css_selector("input#Text1")
     last_name_entry = WebDriverWait(driver, 10).until(
-        EC.presence_of_element_located((By.CSS_SELECTOR, "input#Text1"))
+        EC.presence_of_element_located((By.CSS_SELECTOR, "input#tbLNameSearch"))
 
     )
-    first_name_entry= driver.find_element_by_css_selector("input#Text2")
-    submit_btn = driver.find_element_by_css_selector("input#Button1")
+    submit_btn = driver.find_element_by_css_selector("input#btnLNameSearch")
 
     last_name_entry.send_keys(last_name)
-    first_name_entry.send_keys(first_name)
     submit_btn.click()
 
+    phone_num = ""
     try:
         rows = WebDriverWait(driver, 10).until(
-            EC.presence_of_all_elements_located((By.CSS_SELECTOR, "table#DirData > tbody > tr"))
+            EC.presence_of_all_elements_located((By.CSS_SELECTOR, "table#gvSortByLName > tbody > tr"))
 
         )
-        phone_num = rows[1].find_elements_by_css_selector("td")[1].text.strip()
-        email = rows[1].find_elements_by_css_selector("td")[5].text.strip()
+
+        for i, row in enumerate(rows):
+            if i==0:
+                continue
+
+            cols = row.find_elements_by_css_selector("td")
+            name_tmp = cols[0].text.strip()
+            phone_num_tmp = cols[1].text.strip()
+
+            if first_name in name_tmp.upper() and last_name in name_tmp.upper():
+                phone_num = phone_num_tmp
+                break
 
     except:
         phone_num = ""
-        email = ""
 
     print(phone_num)
-    print(email)
 
     driver.quit()
 
-    return [phone_num, email]
+    return phone_num
 
-scraping(first_name="SHANNON", last_name="ACOSTA")
+scraping(first_name="ANN", last_name="ADAMS")
 # scraping(first_name="ANTHONY", last_name="ABBATE")
